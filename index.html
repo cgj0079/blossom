@@ -1,0 +1,556 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  #sakura-container {
+    position: relative;
+    width: 100%;
+    height: 520px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #f8e8ef 0%, #fce8d5 40%, #fff5f0 100%);
+    border-radius: 16px;
+    cursor: crosshair;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #sakura-container {
+      background: linear-gradient(180deg, #1a0d14 0%, #2a1020 40%, #160a10 100%);
+    }
+    #title-text { color: #f9c8d8 !important; text-shadow: 0 0 30px rgba(255,150,180,0.6) !important; }
+    #subtitle-text { color: #d4899a !important; }
+    #ground-canvas { opacity: 0.7; }
+    .stat-box { background: rgba(80,20,40,0.6) !important; border-color: rgba(200,100,130,0.3) !important; color: #f9c8d8 !important; }
+    #controls-bar { background: rgba(40,10,20,0.7) !important; border-color: rgba(200,100,130,0.25) !important; }
+    #controls-bar label { color: #d4899a !important; }
+    #controls-bar button { background: rgba(180,80,110,0.3) !important; border-color: rgba(200,100,130,0.4) !important; color: #f9c8d8 !important; }
+    #controls-bar button:hover { background: rgba(180,80,110,0.55) !important; }
+  }
+
+  canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+  #overlay-ui {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 28px;
+  }
+
+  #title-text {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    color: #9b3a5a;
+    text-shadow: 0 2px 20px rgba(180,80,120,0.3);
+    pointer-events: none;
+  }
+
+  #subtitle-text {
+    font-family: 'Noto Serif KR', serif;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: #c4789a;
+    margin-top: 6px;
+    pointer-events: none;
+  }
+
+  #stats-row {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    pointer-events: none;
+  }
+
+  .stat-box {
+    background: rgba(255,255,255,0.45);
+    border: 0.5px solid rgba(180,100,130,0.25);
+    border-radius: 10px;
+    padding: 7px 14px;
+    text-align: center;
+    backdrop-filter: blur(6px);
+    font-size: 11px;
+    color: #9b3a5a;
+    letter-spacing: 1px;
+  }
+
+  .stat-val {
+    font-size: 18px;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 1px;
+  }
+
+  #controls-bar {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255,255,255,0.4);
+    border: 0.5px solid rgba(180,100,130,0.2);
+    border-radius: 40px;
+    padding: 8px 20px;
+    backdrop-filter: blur(8px);
+    pointer-events: all;
+    white-space: nowrap;
+  }
+
+  #controls-bar label {
+    font-size: 11px;
+    color: #a05070;
+    letter-spacing: 1px;
+  }
+
+  #controls-bar input[type=range] {
+    width: 80px;
+    accent-color: #c4789a;
+  }
+
+  #controls-bar button {
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 0.5px solid rgba(180,100,130,0.4);
+    background: rgba(200,120,150,0.2);
+    color: #9b3a5a;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: 'Noto Serif KR', serif;
+  }
+
+  #controls-bar button:hover {
+    background: rgba(200,120,150,0.4);
+  }
+
+  #click-hint {
+    position: absolute;
+    top: 88px;
+    font-size: 10px;
+    color: #c4789a;
+    letter-spacing: 2px;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    #sakura-container {
+      background: linear-gradient(180deg, #1a0d14 0%, #2a1020 40%, #160a10 100%);
+    }
+  }
+</style>
+
+<div id="sakura-container">
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="main-canvas"></canvas>
+  <canvas id="ground-canvas"></canvas>
+
+  <div id="overlay-ui">
+    <div id="title-text">벚꽃 시뮬레이터</div>
+    <div id="subtitle-text">봄날의 꿈</div>
+    <div id="click-hint">화면을 클릭하면 꽃비가 내립니다</div>
+  </div>
+
+  <div id="stats-row">
+    <div class="stat-box">
+      <span class="stat-val" id="stat-petals">0</span>꽃잎
+    </div>
+    <div class="stat-box">
+      <span class="stat-val" id="stat-fallen">0</span>낙화
+    </div>
+    <div class="stat-box">
+      <span class="stat-val" id="stat-wind">0</span>바람
+    </div>
+  </div>
+
+  <div id="controls-bar">
+    <label>꽃잎 수</label>
+    <input type="range" id="petal-count" min="20" max="120" value="60" step="5">
+    <label>바람</label>
+    <input type="range" id="wind-slider" min="-3" max="3" value="0.5" step="0.1">
+    <button id="btn-burst">꽃비 ☆</button>
+    <button id="btn-clear">초기화</button>
+  </div>
+</div>
+
+<script>
+(function() {
+  const container = document.getElementById('sakura-container');
+  const mainCanvas = document.getElementById('main-canvas');
+  const groundCanvas = document.getElementById('ground-canvas');
+  const bgCanvas = document.getElementById('bg-canvas');
+  const ctx = mainCanvas.getContext('2d');
+  const gctx = groundCanvas.getContext('2d');
+  const bctx = bgCanvas.getContext('2d');
+
+  let W, H;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  function resize() {
+    const rect = container.getBoundingClientRect();
+    W = rect.width; H = rect.height;
+    [mainCanvas, groundCanvas, bgCanvas].forEach(c => { c.width = W; c.height = H; });
+    drawBackground();
+    groundPiles = [];
+  }
+
+  // Background: soft radial glow + distant tree silhouettes
+  function drawBackground() {
+    bctx.clearRect(0, 0, W, H);
+    if (!isDark) {
+      // soft vignette glow
+      const grd = bctx.createRadialGradient(W*0.5, H*0.3, 0, W*0.5, H*0.3, W*0.6);
+      grd.addColorStop(0, 'rgba(255,220,230,0.35)');
+      grd.addColorStop(1, 'rgba(255,200,215,0)');
+      bctx.fillStyle = grd;
+      bctx.fillRect(0, 0, W, H);
+    } else {
+      const grd = bctx.createRadialGradient(W*0.5, H*0.3, 0, W*0.5, H*0.3, W*0.6);
+      grd.addColorStop(0, 'rgba(180,60,100,0.12)');
+      grd.addColorStop(1, 'rgba(100,20,40,0)');
+      bctx.fillStyle = grd;
+      bctx.fillRect(0, 0, W, H);
+    }
+
+    // Draw stylized tree trunks
+    drawTree(bctx, W*0.08, H*0.95, H*0.38, 22);
+    drawTree(bctx, W*0.88, H*0.95, H*0.32, 18);
+    drawTree(bctx, W*0.95, H*0.95, H*0.22, 12);
+
+    // Ground gradient
+    const gg = bctx.createLinearGradient(0, H*0.85, 0, H);
+    if (!isDark) {
+      gg.addColorStop(0, 'rgba(240,180,190,0)');
+      gg.addColorStop(1, 'rgba(230,160,170,0.28)');
+    } else {
+      gg.addColorStop(0, 'rgba(80,20,40,0)');
+      gg.addColorStop(1, 'rgba(60,10,25,0.4)');
+    }
+    bctx.fillStyle = gg;
+    bctx.fillRect(0, 0, W, H);
+  }
+
+  function drawTree(c, x, baseY, height, trunkW) {
+    c.save();
+    c.globalAlpha = isDark ? 0.25 : 0.12;
+    // trunk
+    c.fillStyle = isDark ? '#4a1a28' : '#7a3a50';
+    c.beginPath();
+    c.moveTo(x - trunkW/2, baseY);
+    c.lineTo(x + trunkW/2, baseY);
+    c.lineTo(x + trunkW*0.35, baseY - height);
+    c.lineTo(x - trunkW*0.35, baseY - height);
+    c.closePath();
+    c.fill();
+    // branches
+    const branchColor = isDark ? '#5a2038' : '#9a5060';
+    c.strokeStyle = branchColor;
+    c.lineWidth = trunkW * 0.3;
+    c.lineCap = 'round';
+    [[-0.4, 0.5], [0.45, 0.62], [-0.25, 0.75], [0.3, 0.85]].forEach(([dx, dy]) => {
+      c.beginPath();
+      c.moveTo(x + dx*trunkW*0.2, baseY - height*dy);
+      c.lineTo(x + dx*trunkW*4.5, baseY - height*(dy+0.18));
+      c.stroke();
+    });
+    c.restore();
+  }
+
+  // Petal shapes
+  const COLORS_LIGHT = [
+    ['#ffb7cc','#ff8fab','#e8728a'],
+    ['#ffd6e0','#ffaec0','#ff85a0'],
+    ['#ffe8ef','#ffccd9','#ffaabb'],
+    ['#fff0f5','#ffd0e0','#ffb8ce'],
+    ['#f8c8d8','#f0a0b8','#e87898'],
+  ];
+  const COLORS_DARK = [
+    ['#ff90b0','#ff5580','#cc3055'],
+    ['#ffaac0','#ff7090','#dd4868'],
+    ['#ffb0c5','#ff80a0','#cc4060'],
+    ['#ffc0d0','#ff90b0','#dd5875'],
+    ['#ff8fa8','#ff5878','#bb2848'],
+  ];
+
+  function getPetalColors() {
+    const palette = isDark ? COLORS_DARK : COLORS_LIGHT;
+    return palette[Math.floor(Math.random() * palette.length)];
+  }
+
+  class Petal {
+    constructor(x, y, burst) {
+      this.x = x !== undefined ? x : Math.random() * W;
+      this.y = y !== undefined ? y : (burst ? -10 : Math.random() * H * 0.4 - 20);
+      this.vx = (Math.random() - 0.5) * (burst ? 5 : 1.5);
+      this.vy = 0.5 + Math.random() * (burst ? 4 : 1.8);
+      this.size = 5 + Math.random() * 8;
+      this.rotation = Math.random() * Math.PI * 2;
+      this.rotSpeed = (Math.random() - 0.5) * 0.08;
+      this.wobble = Math.random() * Math.PI * 2;
+      this.wobbleSpeed = 0.02 + Math.random() * 0.02;
+      this.wobbleAmp = 0.3 + Math.random() * 0.6;
+      this.colors = getPetalColors();
+      this.opacity = 0;
+      this.fadeIn = 0.04 + Math.random() * 0.03;
+      this.type = Math.floor(Math.random() * 3); // 0=round, 1=oval, 2=heart
+      this.landed = false;
+      this.depth = 0.6 + Math.random() * 0.6; // parallax depth
+    }
+
+    update(wind) {
+      if (this.opacity < 1) this.opacity = Math.min(1, this.opacity + this.fadeIn);
+      this.wobble += this.wobbleSpeed;
+      this.vx += (wind - this.vx) * 0.015;
+      this.x += this.vx + Math.sin(this.wobble) * this.wobbleAmp * this.depth;
+      this.y += this.vy * this.depth;
+      this.rotation += this.rotSpeed;
+
+      if (this.x < -20) this.x = W + 10;
+      if (this.x > W + 20) this.x = -10;
+
+      if (this.y > H - 12) {
+        this.landed = true;
+        return true;
+      }
+      return false;
+    }
+
+    draw(c) {
+      c.save();
+      c.globalAlpha = this.opacity * (0.4 + 0.6 * this.depth);
+      c.translate(this.x, this.y);
+      c.rotate(this.rotation);
+
+      const s = this.size * (0.5 + 0.5 * this.depth);
+
+      if (this.type === 0) {
+        // Cherry blossom: 5 petals
+        for (let i = 0; i < 5; i++) {
+          c.save();
+          c.rotate((Math.PI * 2 / 5) * i);
+          const g = c.createRadialGradient(0, -s*0.35, 0, 0, -s*0.4, s*0.55);
+          g.addColorStop(0, this.colors[0]);
+          g.addColorStop(0.6, this.colors[1]);
+          g.addColorStop(1, this.colors[2]);
+          c.fillStyle = g;
+          c.beginPath();
+          c.ellipse(0, -s*0.38, s*0.28, s*0.42, 0, 0, Math.PI*2);
+          c.fill();
+          c.restore();
+        }
+        // center
+        c.fillStyle = 'rgba(255,240,200,0.8)';
+        c.beginPath();
+        c.arc(0, 0, s*0.15, 0, Math.PI*2);
+        c.fill();
+      } else if (this.type === 1) {
+        // Oval petal
+        const g = c.createRadialGradient(0, 0, 0, 0, 0, s);
+        g.addColorStop(0, this.colors[0]);
+        g.addColorStop(0.7, this.colors[1]);
+        g.addColorStop(1, this.colors[2] + '80');
+        c.fillStyle = g;
+        c.beginPath();
+        c.ellipse(0, 0, s*0.55, s*0.85, 0, 0, Math.PI*2);
+        c.fill();
+        // vein
+        c.strokeStyle = this.colors[2] + '60';
+        c.lineWidth = 0.5;
+        c.beginPath();
+        c.moveTo(0, -s*0.75);
+        c.lineTo(0, s*0.75);
+        c.stroke();
+      } else {
+        // Heart petal
+        c.fillStyle = this.colors[1];
+        c.beginPath();
+        c.moveTo(0, s*0.3);
+        c.bezierCurveTo(s*0.8, -s*0.1, s*0.9, -s*0.9, 0, -s*0.5);
+        c.bezierCurveTo(-s*0.9, -s*0.9, -s*0.8, -s*0.1, 0, s*0.3);
+        c.fill();
+      }
+
+      c.restore();
+    }
+  }
+
+  // Ground accumulation
+  let groundPiles = [];
+  let fallenCount = 0;
+
+  function addToGround(x) {
+    fallenCount++;
+    document.getElementById('stat-fallen').textContent = fallenCount;
+    groundPiles.push({ x, size: 4 + Math.random() * 6, colors: getPetalColors(), rotation: Math.random() * Math.PI * 2 });
+    if (groundPiles.length > 180) groundPiles.shift();
+    drawGround();
+  }
+
+  function drawGround() {
+    gctx.clearRect(0, 0, W, H);
+    groundPiles.forEach(p => {
+      gctx.save();
+      gctx.globalAlpha = 0.65;
+      gctx.translate(p.x, H - 5);
+      gctx.rotate(p.rotation);
+      const g = gctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
+      g.addColorStop(0, p.colors[0]);
+      g.addColorStop(1, p.colors[1] + '80');
+      gctx.fillStyle = g;
+      gctx.beginPath();
+      gctx.ellipse(0, 0, p.size * 0.6, p.size * 0.35, 0, 0, Math.PI * 2);
+      gctx.fill();
+      gctx.restore();
+    });
+  }
+
+  // Particles state
+  let petals = [];
+  let targetCount = 60;
+  let wind = 0.5;
+  let windTarget = 0.5;
+  let animFrame;
+  let lastTime = 0;
+  let sparkles = [];
+
+  class Sparkle {
+    constructor(x, y) {
+      this.x = x; this.y = y;
+      this.life = 1; this.decay = 0.025 + Math.random() * 0.02;
+      this.size = 2 + Math.random() * 4;
+      this.vx = (Math.random() - 0.5) * 2;
+      this.vy = -1 - Math.random() * 2;
+    }
+    update() {
+      this.life -= this.decay;
+      this.x += this.vx; this.y += this.vy;
+    }
+    draw(c) {
+      c.save();
+      c.globalAlpha = this.life * 0.8;
+      c.fillStyle = isDark ? '#ffccdd' : '#ff9ab8';
+      c.beginPath();
+      for (let i = 0; i < 4; i++) {
+        c.rotate(Math.PI / 2);
+        c.moveTo(0, 0);
+        c.lineTo(0, this.size);
+      }
+      // simpler: just draw a star shape
+      const s = this.size;
+      c.save();
+      c.translate(this.x, this.y);
+      for (let i = 0; i < 4; i++) {
+        c.save();
+        c.rotate(i * Math.PI / 2);
+        c.fillRect(-0.8, -s, 1.6, s);
+        c.restore();
+      }
+      c.restore();
+      c.restore();
+    }
+  }
+
+  function spawnPetals() {
+    while (petals.length < targetCount) {
+      petals.push(new Petal());
+    }
+  }
+
+  function burst(cx, cy) {
+    const count = 20 + Math.floor(Math.random() * 15);
+    for (let i = 0; i < count; i++) {
+      const p = new Petal(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40, true);
+      p.opacity = 0.8;
+      petals.push(p);
+    }
+    for (let i = 0; i < 8; i++) sparkles.push(new Sparkle(cx, cy));
+  }
+
+  function loop(ts) {
+    animFrame = requestAnimationFrame(loop);
+    const dt = Math.min(ts - lastTime, 50);
+    lastTime = ts;
+
+    // drift wind
+    windTarget += (Math.random() - 0.5) * 0.015;
+    const slider = parseFloat(document.getElementById('wind-slider').value);
+    windTarget = slider + Math.sin(ts * 0.0003) * 0.4;
+    wind += (windTarget - wind) * 0.04;
+    document.getElementById('stat-wind').textContent = wind.toFixed(1);
+
+    // maintain count
+    while (petals.length < targetCount) {
+      petals.push(new Petal());
+    }
+    if (petals.length > targetCount + 30) {
+      petals.splice(0, petals.length - targetCount - 30);
+    }
+
+    ctx.clearRect(0, 0, W, H);
+
+    // update & draw petals
+    petals = petals.filter(p => {
+      const landed = p.update(wind);
+      if (landed) { addToGround(p.x); return false; }
+      return true;
+    });
+
+    // Sort by depth (farther first) for parallax effect
+    petals.sort((a, b) => b.depth - a.depth);
+    petals.forEach(p => p.draw(ctx));
+
+    // sparkles
+    sparkles = sparkles.filter(s => {
+      s.update();
+      s.draw(ctx);
+      return s.life > 0;
+    });
+
+    document.getElementById('stat-petals').textContent = petals.length;
+  }
+
+  // Events
+  container.addEventListener('click', (e) => {
+    const r = container.getBoundingClientRect();
+    burst(e.clientX - r.left, e.clientY - r.top);
+  });
+
+  document.getElementById('petal-count').addEventListener('input', (e) => {
+    targetCount = parseInt(e.target.value);
+  });
+
+  document.getElementById('btn-burst').addEventListener('click', (e) => {
+    e.stopPropagation();
+    for (let i = 0; i < 5; i++) {
+      burst(W * 0.1 + Math.random() * W * 0.8, H * 0.1 + Math.random() * H * 0.3);
+    }
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', (e) => {
+    e.stopPropagation();
+    petals = [];
+    groundPiles = [];
+    fallenCount = 0;
+    gctx.clearRect(0, 0, W, H);
+    document.getElementById('stat-fallen').textContent = 0;
+  });
+
+  // Init
+  resize();
+  window.addEventListener('resize', resize);
+  spawnPetals();
+  requestAnimationFrame(loop);
+})();
+</script>
