@@ -1,182 +1,131 @@
-
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400&display=swap');
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  #sakura-container {
-    position: relative;
-    width: 100%;
-    height: 520px;
-    overflow: hidden;
-    background: linear-gradient(180deg, #f8e8ef 0%, #fce8d5 40%, #fff5f0 100%);
-    border-radius: 16px;
-    cursor: crosshair;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    #sakura-container {
-      background: linear-gradient(180deg, #1a0d14 0%, #2a1020 40%, #160a10 100%);
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>계절 시뮬레이터</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0e0e12;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Noto Serif KR', serif;
+      gap: 18px;
     }
-    #title-text { color: #f9c8d8 !important; text-shadow: 0 0 30px rgba(255,150,180,0.6) !important; }
-    #subtitle-text { color: #d4899a !important; }
-    #ground-canvas { opacity: 0.7; }
-    .stat-box { background: rgba(80,20,40,0.6) !important; border-color: rgba(200,100,130,0.3) !important; color: #f9c8d8 !important; }
-    #controls-bar { background: rgba(40,10,20,0.7) !important; border-color: rgba(200,100,130,0.25) !important; }
-    #controls-bar label { color: #d4899a !important; }
-    #controls-bar button { background: rgba(180,80,110,0.3) !important; border-color: rgba(200,100,130,0.4) !important; color: #f9c8d8 !important; }
-    #controls-bar button:hover { background: rgba(180,80,110,0.55) !important; }
-  }
-
-  canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-  #overlay-ui {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding-top: 28px;
-  }
-
-  #title-text {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 22px;
-    font-weight: 300;
-    letter-spacing: 6px;
-    color: #9b3a5a;
-    text-shadow: 0 2px 20px rgba(180,80,120,0.3);
-    pointer-events: none;
-  }
-
-  #subtitle-text {
-    font-family: 'Noto Serif KR', serif;
-    font-size: 11px;
-    font-weight: 300;
-    letter-spacing: 3px;
-    color: #c4789a;
-    margin-top: 6px;
-    pointer-events: none;
-  }
-
-  #stats-row {
-    position: absolute;
-    bottom: 60px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 10px;
-    pointer-events: none;
-  }
-
-  .stat-box {
-    background: rgba(255,255,255,0.45);
-    border: 0.5px solid rgba(180,100,130,0.25);
-    border-radius: 10px;
-    padding: 7px 14px;
-    text-align: center;
-    backdrop-filter: blur(6px);
-    font-size: 11px;
-    color: #9b3a5a;
-    letter-spacing: 1px;
-  }
-
-  .stat-val {
-    font-size: 18px;
-    font-weight: 500;
-    display: block;
-    margin-bottom: 1px;
-  }
-
-  #controls-bar {
-    position: absolute;
-    bottom: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    background: rgba(255,255,255,0.4);
-    border: 0.5px solid rgba(180,100,130,0.2);
-    border-radius: 40px;
-    padding: 8px 20px;
-    backdrop-filter: blur(8px);
-    pointer-events: all;
-    white-space: nowrap;
-  }
-
-  #controls-bar label {
-    font-size: 11px;
-    color: #a05070;
-    letter-spacing: 1px;
-  }
-
-  #controls-bar input[type=range] {
-    width: 80px;
-    accent-color: #c4789a;
-  }
-
-  #controls-bar button {
-    font-size: 11px;
-    letter-spacing: 1px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    border: 0.5px solid rgba(180,100,130,0.4);
-    background: rgba(200,120,150,0.2);
-    color: #9b3a5a;
-    cursor: pointer;
-    transition: background 0.2s;
-    font-family: 'Noto Serif KR', serif;
-  }
-
-  #controls-bar button:hover {
-    background: rgba(200,120,150,0.4);
-  }
-
-  #click-hint {
-    position: absolute;
-    top: 88px;
-    font-size: 10px;
-    color: #c4789a;
-    letter-spacing: 2px;
-    opacity: 0.7;
-    pointer-events: none;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    #sakura-container {
-      background: linear-gradient(180deg, #1a0d14 0%, #2a1020 40%, #160a10 100%);
+    #season-tabs { display: flex; gap: 10px; z-index: 10; }
+    .tab-btn {
+      font-family: 'Noto Serif KR', serif;
+      font-size: 13px; letter-spacing: 3px; padding: 9px 22px;
+      border-radius: 30px; border: 0.5px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.5);
+      cursor: pointer; transition: all 0.3s;
     }
-  }
-</style>
+    .tab-btn:hover { background: rgba(255,255,255,0.13); color: rgba(255,255,255,0.8); }
+    .tab-btn.active-spring { background: rgba(255,160,180,0.22); border-color: rgba(255,160,180,0.5); color: #ffb7cc; }
+    .tab-btn.active-summer { background: rgba(100,170,220,0.22); border-color: rgba(100,170,220,0.5); color: #9ed5ff; }
+    .tab-btn.active-autumn { background: rgba(220,120,40,0.22); border-color: rgba(220,120,40,0.5); color: #f4a34a; }
+    .tab-btn.active-winter { background: rgba(160,200,240,0.22); border-color: rgba(160,200,240,0.5); color: #c8e4ff; }
+    #sim-container {
+      position: relative; width: 900px; max-width: 100vw; height: 580px;
+      overflow: hidden; border-radius: 20px; cursor: crosshair; transition: box-shadow 0.8s;
+    }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    #overlay-ui {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      pointer-events: none; display: flex; flex-direction: column;
+      align-items: center; padding-top: 30px;
+    }
+    #title-text { font-size: 26px; font-weight: 300; letter-spacing: 8px; transition: color 0.8s, text-shadow 0.8s; }
+    #subtitle-text { font-size: 12px; font-weight: 300; letter-spacing: 4px; margin-top: 6px; transition: color 0.8s; }
+    #click-hint { position: absolute; top: 94px; font-size: 11px; letter-spacing: 2px; opacity: 0.6; pointer-events: none; transition: color 0.8s; }
+    #stats-row {
+      position: absolute; bottom: 66px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; pointer-events: none;
+    }
+    .stat-box {
+      border-radius: 12px; padding: 8px 18px; text-align: center;
+      backdrop-filter: blur(8px); font-size: 12px; letter-spacing: 1px;
+      min-width: 70px; border: 0.5px solid;
+      transition: background 0.8s, border-color 0.8s, color 0.8s;
+    }
+    .stat-val { font-size: 22px; font-weight: 500; display: block; margin-bottom: 2px; }
+    #controls-bar {
+      position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 14px; border-radius: 40px;
+      padding: 9px 22px; backdrop-filter: blur(10px); pointer-events: all;
+      white-space: nowrap; border: 0.5px solid; transition: background 0.8s, border-color 0.8s;
+    }
+    #controls-bar label { font-size: 12px; letter-spacing: 1px; transition: color 0.8s; }
+    #controls-bar input[type=range] { width: 85px; cursor: pointer; }
+    #controls-bar button {
+      font-size: 12px; letter-spacing: 1px; padding: 6px 14px; border-radius: 20px;
+      cursor: pointer; transition: background 0.2s, border-color 0.8s, color 0.8s;
+      font-family: 'Noto Serif KR', serif; border: 0.5px solid;
+    }
+    .theme-spring #title-text    { color: #ffb7cc; text-shadow: 0 2px 24px rgba(255,120,160,0.4); }
+    .theme-spring #subtitle-text { color: #e8849a; }
+    .theme-spring #click-hint    { color: #e8849a; }
+    .theme-spring .stat-box      { background: rgba(255,150,170,0.15); border-color: rgba(255,150,170,0.3); color: #ffb7cc; }
+    .theme-spring #controls-bar  { background: rgba(40,15,25,0.5); border-color: rgba(255,150,170,0.25); }
+    .theme-spring #controls-bar label  { color: #e8849a; }
+    .theme-spring #controls-bar button { background: rgba(200,100,130,0.2); border-color: rgba(255,150,170,0.4); color: #ffb7cc; }
+    .theme-spring #controls-bar button:hover { background: rgba(200,100,130,0.4); }
+    .theme-autumn #title-text    { color: #f4a34a; text-shadow: 0 2px 24px rgba(220,100,30,0.5); }
+    .theme-autumn #subtitle-text { color: #c87a30; }
+    .theme-autumn #click-hint    { color: #c87a30; }
+    .theme-autumn .stat-box      { background: rgba(200,100,30,0.15); border-color: rgba(200,100,30,0.3); color: #f4a34a; }
+    .theme-autumn #controls-bar  { background: rgba(25,12,5,0.55); border-color: rgba(200,100,30,0.25); }
+    .theme-autumn #controls-bar label  { color: #c87a30; }
+    .theme-autumn #controls-bar button { background: rgba(180,80,20,0.2); border-color: rgba(200,100,30,0.4); color: #f4a34a; }
+    .theme-autumn #controls-bar button:hover { background: rgba(180,80,20,0.42); }
+    .theme-summer #title-text    { color: #98d3ff; text-shadow: 0 2px 24px rgba(120,190,240,0.45); }
+    .theme-summer #subtitle-text { color: #7ac2ea; }
+    .theme-summer #click-hint    { color: #7ac2ea; }
+    .theme-summer .stat-box      { background: rgba(110,170,220,0.16); border-color: rgba(110,170,220,0.3); color: #9ed5ff; }
+    .theme-summer #controls-bar  { background: rgba(12,25,40,0.55); border-color: rgba(120,190,240,0.2); }
+    .theme-summer #controls-bar label  { color: #7ac2ea; }
+    .theme-summer #controls-bar button { background: rgba(80,130,190,0.18); border-color: rgba(120,190,240,0.35); color: #9ed5ff; }
+    .theme-summer #controls-bar button:hover { background: rgba(80,130,190,0.35); }
+    .theme-winter #title-text    { color: #c8e4ff; text-shadow: 0 2px 28px rgba(120,180,240,0.5); }
+    .theme-winter #subtitle-text { color: #8ab8d8; }
+    .theme-winter #click-hint    { color: #8ab8d8; }
+    .theme-winter .stat-box      { background: rgba(120,180,240,0.12); border-color: rgba(120,180,240,0.25); color: #c8e4ff; }
+    .theme-winter #controls-bar  { background: rgba(5,10,22,0.6); border-color: rgba(120,180,240,0.2); }
+    .theme-winter #controls-bar label  { color: #8ab8d8; }
+    .theme-winter #controls-bar button { background: rgba(80,140,210,0.18); border-color: rgba(120,180,240,0.35); color: #c8e4ff; }
+    .theme-winter #controls-bar button:hover { background: rgba(80,140,210,0.38); }
+  </style>
+</head>
+<body>
 
-<div id="sakura-container">
+<div id="season-tabs">
+  <!-- <button class="tab-btn active-spring" data-season="spring">🌸 봄</button> -->
+  <!-- <button class="tab-btn" data-season="summer">🌧️ 여름</button> -->
+  <!-- <button class="tab-btn" data-season="autumn">🍂 가을</button> -->
+  <!-- <button class="tab-btn" data-season="winter">❄️ 겨울</button> -->
+</div>
+
+<div id="sim-container" class="theme-spring">
   <canvas id="bg-canvas"></canvas>
   <canvas id="main-canvas"></canvas>
   <canvas id="ground-canvas"></canvas>
-
   <div id="overlay-ui">
     <div id="title-text">벚꽃 시뮬레이터</div>
     <div id="subtitle-text">봄날의 꿈</div>
     <div id="click-hint">화면을 클릭하면 꽃비가 내립니다</div>
   </div>
-
   <div id="stats-row">
-    <div class="stat-box">
-      <span class="stat-val" id="stat-petals">0</span>꽃잎
-    </div>
-    <div class="stat-box">
-      <span class="stat-val" id="stat-fallen">0</span>낙화
-    </div>
-    <div class="stat-box">
-      <span class="stat-val" id="stat-wind">0</span>바람
-    </div>
+    <div class="stat-box"><span class="stat-val" id="stat-particles">0</span><span id="stat-label-p">꽃잎</span></div>
+    <div class="stat-box"><span class="stat-val" id="stat-fallen">0</span><span id="stat-label-f">낙화</span></div>
+    <div class="stat-box"><span class="stat-val" id="stat-wind">0</span>바람</div>
   </div>
-
   <div id="controls-bar">
-    <label>꽃잎 수</label>
+    <label id="ctrl-count-label">꽃잎 수</label>
     <input type="range" id="petal-count" min="20" max="120" value="60" step="5">
     <label>바람</label>
     <input type="range" id="wind-slider" min="-3" max="3" value="0.5" step="0.1">
@@ -186,371 +135,554 @@
 </div>
 
 <script>
-(function() {
-  const container = document.getElementById('sakura-container');
-  const mainCanvas = document.getElementById('main-canvas');
+(function () {
+
+  /* ══════════════════════════════════════════
+     DRAW FUNCTIONS — no random() calls inside!
+     All randomness is baked into Particle ctor.
+  ══════════════════════════════════════════ */
+
+  // Cherry blossom: single detached petal (3 variants, shape fixed per particle)
+  function drawCherryBlossom(c, s, colors, variant) {
+    if (variant === 0) {
+      // Classic sakura petal — rounded with top notch
+      const g = c.createRadialGradient(0, s*0.05, s*0.05, 0, -s*0.1, s*0.95);
+      g.addColorStop(0, colors[0]);
+      g.addColorStop(0.5, colors[1]);
+      g.addColorStop(1, colors[2]);
+      c.fillStyle = g;
+      c.beginPath();
+      c.moveTo(0, s * 0.78);
+      c.bezierCurveTo(-s*0.52, s*0.52,  -s*0.88, -s*0.08, -s*0.52, -s*0.62);
+      c.bezierCurveTo(-s*0.28, -s*0.92,  -s*0.09, -s*1.02,  0,      -s*0.84);
+      c.bezierCurveTo( s*0.09, -s*1.02,   s*0.28, -s*0.92,  s*0.52, -s*0.62);
+      c.bezierCurveTo( s*0.88, -s*0.08,   s*0.52,  s*0.52,  0,       s*0.78);
+      c.closePath();
+      c.fill();
+      // center vein
+      c.strokeStyle = colors[2] + '55';
+      c.lineWidth = 0.6;
+      c.beginPath(); c.moveTo(0, s*0.65); c.lineTo(0, -s*0.5); c.stroke();
+    } else if (variant === 1) {
+      // Oval petal with lateral veins
+      const g = c.createRadialGradient(0, -s*0.08, 0, 0, 0, s*0.9);
+      g.addColorStop(0, colors[0]);
+      g.addColorStop(0.6, colors[1]);
+      g.addColorStop(1, colors[2] + 'bb');
+      c.fillStyle = g;
+      c.beginPath();
+      c.ellipse(0, 0, s*0.46, s*0.84, 0, 0, Math.PI*2);
+      c.fill();
+      c.strokeStyle = colors[2] + '44'; c.lineWidth = 0.55;
+      c.beginPath(); c.moveTo(0,-s*0.72); c.lineTo(0,s*0.72); c.stroke();
+      [[-0.28,  0.12], [-0.22, -0.22], [0.28,  0.12], [0.22, -0.22]].forEach(([dx,dy])=>{
+        c.beginPath(); c.moveTo(0,dy*s); c.lineTo(dx*s,(dy+0.28)*s); c.stroke();
+      });
+    } else {
+      // Heart petal
+      c.fillStyle = colors[1];
+      c.beginPath();
+      c.moveTo(0, s*0.75);
+      c.bezierCurveTo(-s*0.88,  s*0.18,  -s*1.02, -s*0.52, -s*0.48, -s*0.84);
+      c.bezierCurveTo(-s*0.18, -s*1.02,    0,      -s*0.78,   0,     -s*0.58);
+      c.bezierCurveTo(  0,     -s*0.78,   s*0.18, -s*1.02,  s*0.48, -s*0.84);
+      c.bezierCurveTo( s*1.02, -s*0.52,   s*0.88,  s*0.18,   0,      s*0.75);
+      c.fill();
+    }
+  }
+
+  // Maple leaf (variant 0), oak oval (variant 1), ginkgo (variant 2)
+  function drawLeaf(c, s, colors, variant) {
+    if (variant === 0) {
+      // Maple — 5-lobe silhouette
+      c.fillStyle = colors[1];
+      c.beginPath();
+      c.moveTo(0, s*0.88);               // stem end
+      c.lineTo(-s*0.18, s*0.36);
+      // lower-left lobe
+      c.bezierCurveTo(-s*0.52, s*0.58, -s*0.90, s*0.24, -s*0.80, -s*0.02);
+      c.bezierCurveTo(-s*0.70, -s*0.24, -s*0.40, -s*0.06, -s*0.24, -s*0.14);
+      // upper-left lobe
+      c.bezierCurveTo(-s*0.60, -s*0.54, -s*0.54, -s*0.90, -s*0.22, -s*0.90);
+      c.bezierCurveTo(-s*0.08, -s*0.90,  0,      -s*0.70,  0,      -s*0.62);
+      // upper-right lobe (mirror)
+      c.bezierCurveTo( 0,      -s*0.70,  s*0.08, -s*0.90,  s*0.22, -s*0.90);
+      c.bezierCurveTo( s*0.54, -s*0.90,  s*0.60, -s*0.54,  s*0.24, -s*0.14);
+      // lower-right lobe
+      c.bezierCurveTo( s*0.40, -s*0.06,  s*0.70, -s*0.24,  s*0.80, -s*0.02);
+      c.bezierCurveTo( s*0.90,  s*0.24,  s*0.52,  s*0.58,  s*0.18,  s*0.36);
+      c.closePath();
+      c.fill();
+      // stem
+      c.strokeStyle = colors[2]; c.lineWidth = s*0.07; c.lineCap='round';
+      c.beginPath(); c.moveTo(0,s*0.88); c.lineTo(0,s*0.28); c.stroke();
+      // main veins
+      c.strokeStyle = colors[0]+'99'; c.lineWidth=0.75;
+      c.beginPath(); c.moveTo(0,s*0.28); c.lineTo(0,-s*0.60); c.stroke();
+      c.beginPath(); c.moveTo(0,s*0.04); c.lineTo(-s*0.56,-s*0.02); c.stroke();
+      c.beginPath(); c.moveTo(0,s*0.04); c.lineTo( s*0.56,-s*0.02); c.stroke();
+      c.beginPath(); c.moveTo(0,-s*0.22); c.lineTo(-s*0.38,-s*0.64); c.stroke();
+      c.beginPath(); c.moveTo(0,-s*0.22); c.lineTo( s*0.38,-s*0.64); c.stroke();
+    } else if (variant === 1) {
+      // Oak oval leaf — serrated edge via sinusoidal path
+      const g = c.createLinearGradient(0,-s*0.88,0,s*0.88);
+      g.addColorStop(0, colors[0]);
+      g.addColorStop(0.45, colors[1]);
+      g.addColorStop(1, colors[2]);
+      c.fillStyle = g;
+      const steps = 48;
+      c.beginPath();
+      for (let i=0; i<=steps; i++) {
+        const t = i/steps;
+        const a = Math.PI * t;
+        const r = s * (0.46 + 0.065*Math.sin(a*6));
+        const px = -r*Math.sin(a);
+        const py =  s*0.85 - s*1.72*t;
+        i===0 ? c.moveTo(px,py) : c.lineTo(px,py);
+      }
+      for (let i=steps; i>=0; i--) {
+        const t = i/steps;
+        const a = Math.PI * t;
+        const r = s * (0.46 + 0.065*Math.sin(a*6+0.55));
+        const px = r*Math.sin(a);
+        const py = s*0.85 - s*1.72*t;
+        c.lineTo(px,py);
+      }
+      c.closePath(); c.fill();
+      // veins
+      c.strokeStyle = colors[0]+'88'; c.lineWidth=0.72;
+      c.beginPath(); c.moveTo(0,s*0.78); c.lineTo(0,-s*0.78); c.stroke();
+      for(let i=1;i<=4;i++){
+        const yv=s*(0.42-i*0.30);
+        c.beginPath(); c.moveTo(0,yv); c.lineTo(-s*0.36,yv-s*0.2); c.stroke();
+        c.beginPath(); c.moveTo(0,yv); c.lineTo( s*0.36,yv-s*0.2); c.stroke();
+      }
+      c.strokeStyle=colors[2]; c.lineWidth=s*0.07; c.lineCap='round';
+      c.beginPath(); c.moveTo(0,s*0.88); c.lineTo(0,s*0.78); c.stroke();
+    } else {
+      // Ginkgo fan
+      c.fillStyle = colors[0];
+      c.beginPath();
+      c.moveTo(0, s*0.58);
+      c.bezierCurveTo(-s*0.08, s*0.32, -s*0.68, -s*0.04, -s*0.74, -s*0.52);
+      c.bezierCurveTo(-s*0.52, -s*1.02,  s*0.52, -s*1.02,  s*0.74, -s*0.52);
+      c.bezierCurveTo( s*0.68, -s*0.04,  s*0.08,  s*0.32,  0,       s*0.58);
+      c.fill();
+      // fan veins
+      c.strokeStyle = colors[2]+'99'; c.lineWidth=0.6;
+      for(let i=-3;i<=3;i++){
+        const tx=i*s*0.18, ty=-s*(0.72+Math.abs(i)*0.06);
+        c.beginPath(); c.moveTo(0,s*0.52); c.lineTo(tx,ty); c.stroke();
+      }
+      // stem
+      c.strokeStyle=colors[2]; c.lineWidth=s*0.065; c.lineCap='round';
+      c.beginPath(); c.moveTo(0,s*0.58); c.lineTo(0,s*0.92); c.stroke();
+    }
+  }
+
+  function drawSnowflake(c, s, colors) {
+    c.strokeStyle=colors[0]; c.lineWidth=Math.max(0.8,s*0.11); c.lineCap='round';
+    for(let i=0;i<6;i++){
+      c.save(); c.rotate(i*Math.PI/3);
+      c.beginPath(); c.moveTo(0,0); c.lineTo(0,-s); c.stroke();
+      [-s*0.58,-s*0.32].forEach(bp=>{
+        const bl=s*0.32;
+        c.beginPath(); c.moveTo(0,bp); c.lineTo( bl*0.5,bp+bl*0.5); c.stroke();
+        c.beginPath(); c.moveTo(0,bp); c.lineTo(-bl*0.5,bp+bl*0.5); c.stroke();
+      });
+      c.restore();
+    }
+    c.fillStyle=colors[1];
+    c.beginPath(); c.arc(0,0,s*0.13,0,Math.PI*2); c.fill();
+  }
+
+  function drawRainDrop(c, s, colors) {
+    const dropLength = s * 1.8;
+    const alpha = 0.8;
+    const grad = c.createLinearGradient(0, 0, 0, dropLength);
+    grad.addColorStop(0, colors[0]);
+    grad.addColorStop(0.5, colors[1]);
+    grad.addColorStop(1, colors[2] + '55');
+    c.strokeStyle = grad;
+    c.lineWidth = Math.max(1, s * 0.18);
+    c.lineCap = 'round';
+    c.beginPath();
+    c.moveTo(0, -dropLength * 0.1);
+    c.lineTo(0, dropLength * 0.9);
+    c.stroke();
+    c.globalAlpha = alpha;
+    c.fillStyle = colors[2] + '66';
+    c.beginPath();
+    c.arc(0, dropLength * 0.9, s * 0.22, 0, Math.PI * 2);
+    c.fill();
+    c.globalAlpha = 1;
+  }
+
+  /* ══════════════════════════════
+     THEMES
+  ══════════════════════════════ */
+  const THEMES = {
+    spring: {
+      title:'벚꽃 시뮬레이터', subtitle:'봄날의 꿈',
+      hint:'화면을 클릭하면 꽃비가 내립니다',
+      particleLabel:'꽃잎', fallenLabel:'낙화', burstLabel:'꽃비 ☆', countLabel:'꽃잎 수',
+      containerBg:'linear-gradient(180deg,#1a0810 0%,#28101e 40%,#180c14 100%)',
+      boxShadow:'0 8px 60px rgba(255,80,120,0.2)', bodyBg:'#120810',
+      bgGlow:{r:180,g:60,b:100,a:0.15},
+      groundColor:'rgba(80,20,40,0)', groundColor2:'rgba(60,10,25,0.45)',
+      trunkColor:'#4a1a28', branchColor:'#5a2038', trunkAlpha:0.28,
+      particleColors:[
+        ['#ffccd9','#ff9ab8','#e8728a'],
+        ['#ffd6e0','#ffaec0','#ff85a0'],
+        ['#ffe0ec','#ffbcd0','#ffa0bc'],
+        ['#f8c8d8','#f090b0','#e07898'],
+      ],
+      sparkleColor:'#ffccdd',
+      drawParticle: drawCherryBlossom, variantCount:3,
+    },
+    autumn: {
+      title:'단풍 시뮬레이터', subtitle:'가을의 노래',
+      hint:'화면을 클릭하면 단풍비가 내립니다',
+      particleLabel:'단풍잎', fallenLabel:'낙엽', burstLabel:'낙엽비 ☆', countLabel:'단풍잎 수',
+      containerBg:'linear-gradient(180deg,#1a0e04 0%,#2a1508 40%,#1c0e06 100%)',
+      boxShadow:'0 8px 60px rgba(200,100,30,0.22)', bodyBg:'#130c04',
+      bgGlow:{r:200,g:100,b:30,a:0.14},
+      groundColor:'rgba(120,60,10,0)', groundColor2:'rgba(80,40,5,0.45)',
+      trunkColor:'#3a1e08', branchColor:'#5a3010', trunkAlpha:0.35,
+      particleColors:[
+        ['#f4a34a','#e07020','#b04810'],
+        ['#e85020','#c03010','#902008'],
+        ['#f0c040','#d09020','#a06010'],
+        ['#d06030','#b04020','#803010'],
+        ['#e89040','#c06020','#904010'],
+      ],
+      sparkleColor:'#f4a34a',
+      drawParticle: drawLeaf, variantCount:3,
+    },
+    summer: {
+      title:'여름 비 시뮬레이터', subtitle:'빗줄기를 느껴봐요',
+      hint:'화면을 클릭하면 소나기가 내립니다',
+      particleLabel:'빗방울', fallenLabel:'빗물', burstLabel:'소나기 ☆', countLabel:'빗방울 수',
+      containerBg:'linear-gradient(180deg,#06131f 0%,#11324e 40%,#091726 100%)',
+      boxShadow:'0 8px 60px rgba(90,150,220,0.22)', bodyBg:'#050c16',
+      bgGlow:{r:95,g:170,b:230,a:0.14},
+      groundColor:'rgba(60,110,170,0)', groundColor2:'rgba(40,70,110,0.45)',
+      trunkColor:'#0c1d2d', branchColor:'#122b40', trunkAlpha:0.32,
+      particleColors:[
+        ['#a8dcff','#72b8f0','#4b89c6'],
+        ['#b8e0ff','#88c8f4','#5e9fd2'],
+        ['#c8e8ff','#98d2f7','#70a8d6'],
+      ],
+      sparkleColor:'#a8ddff',
+      drawParticle: drawRainDrop, variantCount:1,
+    },
+    winter: {
+      title:'눈꽃 시뮬레이터', subtitle:'겨울의 고요',
+      hint:'화면을 클릭하면 눈보라가 칩니다',
+      particleLabel:'눈송이', fallenLabel:'적설', burstLabel:'눈보라 ☆', countLabel:'눈송이 수',
+      containerBg:'linear-gradient(180deg,#04090f 0%,#08101a 40%,#060c12 100%)',
+      boxShadow:'0 8px 60px rgba(100,160,220,0.18)', bodyBg:'#04080e',
+      bgGlow:{r:80,g:140,b:200,a:0.12},
+      groundColor:'rgba(140,180,220,0)', groundColor2:'rgba(180,210,240,0.35)',
+      trunkColor:'#0c1c2c', branchColor:'#1a2c40', trunkAlpha:0.4,
+      particleColors:[
+        ['#ffffff','#ddf0ff','#b0d8f8'],
+        ['#eef8ff','#cce8ff','#a0c8f0'],
+        ['#f8fcff','#ddeeff','#bbd8f4'],
+      ],
+      sparkleColor:'#c8e4ff',
+      drawParticle: drawSnowflake, variantCount:1,
+    },
+  };
+
+  /* ══════════════════════════════
+     ENGINE
+  ══════════════════════════════ */
+  const container    = document.getElementById('sim-container');
+  const mainCanvas   = document.getElementById('main-canvas');
   const groundCanvas = document.getElementById('ground-canvas');
-  const bgCanvas = document.getElementById('bg-canvas');
-  const ctx = mainCanvas.getContext('2d');
+  const bgCanvas     = document.getElementById('bg-canvas');
+  const ctx  = mainCanvas.getContext('2d');
   const gctx = groundCanvas.getContext('2d');
   const bctx = bgCanvas.getContext('2d');
 
   let W, H;
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  let currentTheme='spring', theme=THEMES.spring;
+  let particles=[], groundPiles=[], sparkles=[];
+  let fallenCount=0, wind=0.5, windTarget=0.5, targetCount=60;
 
-  function resize() {
-    const rect = container.getBoundingClientRect();
-    W = rect.width; H = rect.height;
-    [mainCanvas, groundCanvas, bgCanvas].forEach(c => { c.width = W; c.height = H; });
-    drawBackground();
-    groundPiles = [];
+  function resize(){
+    const r=container.getBoundingClientRect();
+    W=r.width; H=r.height;
+    [mainCanvas,groundCanvas,bgCanvas].forEach(c=>{c.width=W;c.height=H;});
+    drawBackground(); groundPiles=[]; gctx.clearRect(0,0,W,H);
   }
 
-  // Background: soft radial glow + distant tree silhouettes
-  function drawBackground() {
-    bctx.clearRect(0, 0, W, H);
-    if (!isDark) {
-      // soft vignette glow
-      const grd = bctx.createRadialGradient(W*0.5, H*0.3, 0, W*0.5, H*0.3, W*0.6);
-      grd.addColorStop(0, 'rgba(255,220,230,0.35)');
-      grd.addColorStop(1, 'rgba(255,200,215,0)');
-      bctx.fillStyle = grd;
-      bctx.fillRect(0, 0, W, H);
-    } else {
-      const grd = bctx.createRadialGradient(W*0.5, H*0.3, 0, W*0.5, H*0.3, W*0.6);
-      grd.addColorStop(0, 'rgba(180,60,100,0.12)');
-      grd.addColorStop(1, 'rgba(100,20,40,0)');
-      bctx.fillStyle = grd;
-      bctx.fillRect(0, 0, W, H);
+  function drawBackground(){
+    bctx.clearRect(0,0,W,H);
+    const {r,g,b,a}=theme.bgGlow;
+    const grd=bctx.createRadialGradient(W*0.5,H*0.3,0,W*0.5,H*0.3,W*0.65);
+    grd.addColorStop(0,`rgba(${r},${g},${b},${a})`);
+    grd.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    bctx.fillStyle=grd; bctx.fillRect(0,0,W,H);
+    if(currentTheme==='winter'){
+      for(let i=0;i<80;i++){
+        bctx.globalAlpha=0.3+Math.random()*0.5;
+        bctx.fillStyle='rgba(200,230,255,0.8)';
+        bctx.beginPath();
+        bctx.arc(Math.random()*W,Math.random()*H*0.7,0.3+Math.random()*1,0,Math.PI*2);
+        bctx.fill();
+      }
+      bctx.globalAlpha=1;
     }
-
-    // Draw stylized tree trunks
-    drawTree(bctx, W*0.08, H*0.95, H*0.38, 22);
-    drawTree(bctx, W*0.88, H*0.95, H*0.32, 18);
-    drawTree(bctx, W*0.95, H*0.95, H*0.22, 12);
-
-    // Ground gradient
-    const gg = bctx.createLinearGradient(0, H*0.85, 0, H);
-    if (!isDark) {
-      gg.addColorStop(0, 'rgba(240,180,190,0)');
-      gg.addColorStop(1, 'rgba(230,160,170,0.28)');
-    } else {
-      gg.addColorStop(0, 'rgba(80,20,40,0)');
-      gg.addColorStop(1, 'rgba(60,10,25,0.4)');
-    }
-    bctx.fillStyle = gg;
-    bctx.fillRect(0, 0, W, H);
+    drawTree(bctx,W*0.07,H*0.98,H*0.44,24);
+    drawTree(bctx,W*0.87,H*0.98,H*0.36,20);
+    drawTree(bctx,W*0.96,H*0.98,H*0.25,13);
+    const gg=bctx.createLinearGradient(0,H*0.84,0,H);
+    gg.addColorStop(0,theme.groundColor); gg.addColorStop(1,theme.groundColor2);
+    bctx.fillStyle=gg; bctx.fillRect(0,0,W,H);
   }
 
-  function drawTree(c, x, baseY, height, trunkW) {
-    c.save();
-    c.globalAlpha = isDark ? 0.25 : 0.12;
-    // trunk
-    c.fillStyle = isDark ? '#4a1a28' : '#7a3a50';
+  function drawTree(c,x,baseY,height,trunkW){
+    c.save(); c.globalAlpha=theme.trunkAlpha;
+    c.fillStyle=theme.trunkColor;
     c.beginPath();
-    c.moveTo(x - trunkW/2, baseY);
-    c.lineTo(x + trunkW/2, baseY);
-    c.lineTo(x + trunkW*0.35, baseY - height);
-    c.lineTo(x - trunkW*0.35, baseY - height);
-    c.closePath();
-    c.fill();
-    // branches
-    const branchColor = isDark ? '#5a2038' : '#9a5060';
-    c.strokeStyle = branchColor;
-    c.lineWidth = trunkW * 0.3;
-    c.lineCap = 'round';
-    [[-0.4, 0.5], [0.45, 0.62], [-0.25, 0.75], [0.3, 0.85]].forEach(([dx, dy]) => {
+    c.moveTo(x-trunkW/2,baseY); c.lineTo(x+trunkW/2,baseY);
+    c.lineTo(x+trunkW*0.35,baseY-height); c.lineTo(x-trunkW*0.35,baseY-height);
+    c.closePath(); c.fill();
+    c.strokeStyle=theme.branchColor; c.lineWidth=trunkW*0.32; c.lineCap='round';
+    [[-0.4,0.5],[0.45,0.62],[-0.25,0.75],[0.3,0.85]].forEach(([dx,dy])=>{
       c.beginPath();
-      c.moveTo(x + dx*trunkW*0.2, baseY - height*dy);
-      c.lineTo(x + dx*trunkW*4.5, baseY - height*(dy+0.18));
+      c.moveTo(x+dx*trunkW*0.22,baseY-height*dy);
+      c.lineTo(x+dx*trunkW*4.8,baseY-height*(dy+0.18));
       c.stroke();
     });
+    if(currentTheme==='autumn'){
+      c.globalAlpha=0.18;
+      [[-0.4,0.5],[0.45,0.62],[-0.25,0.75],[0.3,0.85]].forEach(([dx,dy])=>{
+        const tx=x+dx*trunkW*4.8,ty=baseY-height*(dy+0.18);
+        c.fillStyle=['#e07020','#c03010','#f0c040'][Math.floor(Math.random()*3)];
+        c.beginPath(); c.arc(tx,ty,trunkW*1.5,0,Math.PI*2); c.fill();
+      });
+    }
     c.restore();
   }
 
-  // Petal shapes
-  const COLORS_LIGHT = [
-    ['#ffb7cc','#ff8fab','#e8728a'],
-    ['#ffd6e0','#ffaec0','#ff85a0'],
-    ['#ffe8ef','#ffccd9','#ffaabb'],
-    ['#fff0f5','#ffd0e0','#ffb8ce'],
-    ['#f8c8d8','#f0a0b8','#e87898'],
-  ];
-  const COLORS_DARK = [
-    ['#ff90b0','#ff5580','#cc3055'],
-    ['#ffaac0','#ff7090','#dd4868'],
-    ['#ffb0c5','#ff80a0','#cc4060'],
-    ['#ffc0d0','#ff90b0','#dd5875'],
-    ['#ff8fa8','#ff5878','#bb2848'],
-  ];
+  /* ─────────────────────────────────────
+     PARTICLE — natural pendulum physics
+  ───────────────────────────────────── */
+  class Particle {
+    constructor(x, y, isBurst){
+      this.x = x !== undefined ? x : Math.random()*W;
+      this.y = y !== undefined ? y : (isBurst ? -12 : Math.random()*H*0.35-22);
 
-  function getPetalColors() {
-    const palette = isDark ? COLORS_DARK : COLORS_LIGHT;
-    return palette[Math.floor(Math.random() * palette.length)];
-  }
-
-  class Petal {
-    constructor(x, y, burst) {
-      this.x = x !== undefined ? x : Math.random() * W;
-      this.y = y !== undefined ? y : (burst ? -10 : Math.random() * H * 0.4 - 20);
-      this.vx = (Math.random() - 0.5) * (burst ? 5 : 1.5);
-      this.vy = 0.5 + Math.random() * (burst ? 4 : 1.8);
-      this.size = 5 + Math.random() * 8;
-      this.rotation = Math.random() * Math.PI * 2;
-      this.rotSpeed = (Math.random() - 0.5) * 0.08;
-      this.wobble = Math.random() * Math.PI * 2;
-      this.wobbleSpeed = 0.02 + Math.random() * 0.02;
-      this.wobbleAmp = 0.3 + Math.random() * 0.6;
-      this.colors = getPetalColors();
-      this.opacity = 0;
-      this.fadeIn = 0.04 + Math.random() * 0.03;
-      this.type = Math.floor(Math.random() * 3); // 0=round, 1=oval, 2=heart
-      this.landed = false;
-      this.depth = 0.6 + Math.random() * 0.6; // parallax depth
-    }
-
-    update(wind) {
-      if (this.opacity < 1) this.opacity = Math.min(1, this.opacity + this.fadeIn);
-      this.wobble += this.wobbleSpeed;
-      this.vx += (wind - this.vx) * 0.015;
-      this.x += this.vx + Math.sin(this.wobble) * this.wobbleAmp * this.depth;
-      this.y += this.vy * this.depth;
-      this.rotation += this.rotSpeed;
-
-      if (this.x < -20) this.x = W + 10;
-      if (this.x > W + 20) this.x = -10;
-
-      if (this.y > H - 12) {
-        this.landed = true;
-        return true;
+      const bScale = isBurst ? 4.5 : 1.2;
+      this.vx = (Math.random()-0.5)*bScale;
+      this.vy = 0.45 + Math.random()*(isBurst ? 3.5 : 1.6);
+      if(currentTheme==='summer'){
+        this.vy = isBurst ? 3.8 + Math.random()*2.2 : 1.8 + Math.random()*2.6;
       }
-      return false;
+
+      this.size  = 6 + Math.random()*9;
+      this.colorSet = theme.particleColors[Math.floor(Math.random()*theme.particleColors.length)];
+      this.opacity  = 0;
+      this.fadeIn   = 0.03 + Math.random()*0.025;
+      this.depth    = 0.55 + Math.random()*0.65;
+
+      // ── rotation (pendulum model) ──
+      // angle is tilt from the vertical (0 = upright)
+      this.angle    = currentTheme==='summer' ? -(0.18 + Math.random()*0.18) : (Math.random()-0.5)*0.9;
+      this.angleVel = (Math.random()-0.5)*0.10;
+      // each petal has its own preferred hang angle (slight asymmetry)
+      this.hangAngle = currentTheme==='summer' ? -(0.12 + Math.random()*0.15) : (Math.random()-0.5)*0.35;
+      // damping: petals damp more than leaves
+      this.angDamp  = currentTheme==='spring' ? 0.97 : 0.95;
+      // stiffness of pendulum spring
+      this.angK     = currentTheme==='spring' ? 0.032 : 0.028;
+
+      // ── multi-freq drift ──
+      this.dp1 = Math.random()*Math.PI*2;  // phase 1
+      this.dp2 = Math.random()*Math.PI*2;  // phase 2
+      this.df1 = 0.016 + Math.random()*0.016;
+      this.df2 = 0.029 + Math.random()*0.014;
+      this.dA  = 0.38 + Math.random()*0.52; // drift amplitude
+
+      // tumble: some autumn leaves end-over-end
+      this.tumble      = currentTheme==='autumn' && Math.random()<0.22;
+      this.tumbleSpeed = (Math.random()-0.5)*0.055;
+
+      // fixed per-particle variant & flip
+      this.variant = Math.floor(Math.random()*theme.variantCount);
+      this.flip    = currentTheme==='summer' ? false : Math.random()<0.5;   // rain drops don't mirror
     }
 
-    draw(c) {
-      c.save();
-      c.globalAlpha = this.opacity * (0.4 + 0.6 * this.depth);
-      c.translate(this.x, this.y);
-      c.rotate(this.rotation);
+    update(wind){
+      if(this.opacity<1) this.opacity=Math.min(1,this.opacity+this.fadeIn);
 
-      const s = this.size * (0.5 + 0.5 * this.depth);
+      // horizontal wind force
+      this.vx += (wind*this.depth - this.vx)*0.011;
 
-      if (this.type === 0) {
-        // Cherry blossom: 5 petals
-        for (let i = 0; i < 5; i++) {
-          c.save();
-          c.rotate((Math.PI * 2 / 5) * i);
-          const g = c.createRadialGradient(0, -s*0.35, 0, 0, -s*0.4, s*0.55);
-          g.addColorStop(0, this.colors[0]);
-          g.addColorStop(0.6, this.colors[1]);
-          g.addColorStop(1, this.colors[2]);
-          c.fillStyle = g;
-          c.beginPath();
-          c.ellipse(0, -s*0.38, s*0.28, s*0.42, 0, 0, Math.PI*2);
-          c.fill();
-          c.restore();
-        }
-        // center
-        c.fillStyle = 'rgba(255,240,200,0.8)';
-        c.beginPath();
-        c.arc(0, 0, s*0.15, 0, Math.PI*2);
-        c.fill();
-      } else if (this.type === 1) {
-        // Oval petal
-        const g = c.createRadialGradient(0, 0, 0, 0, 0, s);
-        g.addColorStop(0, this.colors[0]);
-        g.addColorStop(0.7, this.colors[1]);
-        g.addColorStop(1, this.colors[2] + '80');
-        c.fillStyle = g;
-        c.beginPath();
-        c.ellipse(0, 0, s*0.55, s*0.85, 0, 0, Math.PI*2);
-        c.fill();
-        // vein
-        c.strokeStyle = this.colors[2] + '60';
-        c.lineWidth = 0.5;
-        c.beginPath();
-        c.moveTo(0, -s*0.75);
-        c.lineTo(0, s*0.75);
-        c.stroke();
+      // multi-freq turbulence drift
+      this.dp1 += this.df1;
+      this.dp2 += this.df2;
+      const drift = Math.sin(this.dp1)*this.dA + Math.sin(this.dp2)*this.dA*0.38;
+
+      // gravity
+      const grav = currentTheme==='winter' ? 0.52 : 1.0;
+      this.x += (this.vx + drift)*this.depth;
+      this.y += this.vy*this.depth*grav;
+
+      // wrap
+      if(this.x<-28) this.x=W+14;
+      if(this.x>W+28) this.x=-14;
+
+      // ── rotation ──
+      if(this.tumble){
+        this.angle += this.tumbleSpeed*this.depth;
       } else {
-        // Heart petal
-        c.fillStyle = this.colors[1];
-        c.beginPath();
-        c.moveTo(0, s*0.3);
-        c.bezierCurveTo(s*0.8, -s*0.1, s*0.9, -s*0.9, 0, -s*0.5);
-        c.bezierCurveTo(-s*0.9, -s*0.9, -s*0.8, -s*0.1, 0, s*0.3);
-        c.fill();
+        // pendulum: target = hangAngle + vx influence (wind tilts the petal)
+        const target = this.hangAngle + this.vx*0.20;
+        this.angleVel += (target - this.angle)*this.angK;
+        this.angleVel *= this.angDamp;
+        this.angle    += this.angleVel;
       }
 
+      return this.y > H-10;
+    }
+
+    draw(c){
+      c.save();
+      const scaledSize = this.size * (0.45 + 0.55 * this.depth);
+      c.globalAlpha = this.opacity * (0.35 + 0.65 * this.depth);
+      c.translate(this.x, this.y);
+      c.rotate(this.angle);
+      if(this.flip) c.scale(-1,1);  // mirror = natural variety, no extra cost
+      theme.drawParticle(c, scaledSize, this.colorSet, this.variant);
       c.restore();
     }
   }
 
-  // Ground accumulation
-  let groundPiles = [];
-  let fallenCount = 0;
+  /* ── Sparkle ── */
+  class Sparkle{
+    constructor(x,y){ this.x=x;this.y=y;this.life=1;this.decay=0.022+Math.random()*0.02;this.size=2+Math.random()*5;this.vx=(Math.random()-0.5)*2.5;this.vy=-1.2-Math.random()*2.5; }
+    update(){ this.life-=this.decay;this.x+=this.vx;this.y+=this.vy; }
+    draw(c){
+      c.save();c.globalAlpha=this.life*0.85;c.fillStyle=theme.sparkleColor;
+      c.translate(this.x,this.y);const s=this.size;
+      for(let i=0;i<4;i++){c.save();c.rotate(i*Math.PI/2);c.fillRect(-0.8,-s,1.6,s);c.restore();}
+      c.restore();
+    }
+  }
 
-  function addToGround(x) {
+  /* ── Ground ── */
+  function addToGround(x){
     fallenCount++;
-    document.getElementById('stat-fallen').textContent = fallenCount;
-    groundPiles.push({ x, size: 4 + Math.random() * 6, colors: getPetalColors(), rotation: Math.random() * Math.PI * 2 });
-    if (groundPiles.length > 180) groundPiles.shift();
+    document.getElementById('stat-fallen').textContent=fallenCount;
+    groundPiles.push({x,size:4+Math.random()*7,colorSet:theme.particleColors[Math.floor(Math.random()*theme.particleColors.length)],rotation:Math.random()*Math.PI*2});
+    if(groundPiles.length>250) groundPiles.shift();
     drawGround();
   }
 
-  function drawGround() {
-    gctx.clearRect(0, 0, W, H);
-    groundPiles.forEach(p => {
+  function drawGround(){
+    gctx.clearRect(0,0,W,H);
+    groundPiles.forEach(p=>{
       gctx.save();
-      gctx.globalAlpha = 0.65;
-      gctx.translate(p.x, H - 5);
-      gctx.rotate(p.rotation);
-      const g = gctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
-      g.addColorStop(0, p.colors[0]);
-      g.addColorStop(1, p.colors[1] + '80');
-      gctx.fillStyle = g;
-      gctx.beginPath();
-      gctx.ellipse(0, 0, p.size * 0.6, p.size * 0.35, 0, 0, Math.PI * 2);
-      gctx.fill();
+      if(currentTheme==='winter'){
+        gctx.globalAlpha=0.7;gctx.fillStyle=p.colorSet[0];
+        gctx.beginPath();gctx.ellipse(p.x,H-4,p.size*0.75,p.size*0.28,0,0,Math.PI*2);gctx.fill();
+      } else if(currentTheme==='summer'){
+        gctx.globalAlpha=0.4;
+        const puddleW = p.size * 2.5;
+        const grd = gctx.createRadialGradient(p.x, H-3, 0, p.x, H-3, puddleW);
+        grd.addColorStop(0, 'rgba(180,220,255,0.6)');
+        grd.addColorStop(1, 'rgba(70,110,150,0)');
+        gctx.fillStyle = grd;
+        gctx.beginPath();gctx.ellipse(p.x, H-3, puddleW, p.size * 0.25, 0, 0, Math.PI*2);
+        gctx.fill();
+      } else {
+        gctx.globalAlpha=0.58;gctx.translate(p.x,H-5);gctx.rotate(p.rotation);
+        const g=gctx.createRadialGradient(0,0,0,0,0,p.size);
+        g.addColorStop(0,p.colorSet[0]);g.addColorStop(1,p.colorSet[1]+'80');
+        gctx.fillStyle=g;gctx.beginPath();gctx.ellipse(0,0,p.size*0.68,p.size*0.36,0,0,Math.PI*2);gctx.fill();
+      }
       gctx.restore();
     });
-  }
-
-  // Particles state
-  let petals = [];
-  let targetCount = 60;
-  let wind = 0.5;
-  let windTarget = 0.5;
-  let animFrame;
-  let lastTime = 0;
-  let sparkles = [];
-
-  class Sparkle {
-    constructor(x, y) {
-      this.x = x; this.y = y;
-      this.life = 1; this.decay = 0.025 + Math.random() * 0.02;
-      this.size = 2 + Math.random() * 4;
-      this.vx = (Math.random() - 0.5) * 2;
-      this.vy = -1 - Math.random() * 2;
-    }
-    update() {
-      this.life -= this.decay;
-      this.x += this.vx; this.y += this.vy;
-    }
-    draw(c) {
-      c.save();
-      c.globalAlpha = this.life * 0.8;
-      c.fillStyle = isDark ? '#ffccdd' : '#ff9ab8';
-      c.beginPath();
-      for (let i = 0; i < 4; i++) {
-        c.rotate(Math.PI / 2);
-        c.moveTo(0, 0);
-        c.lineTo(0, this.size);
-      }
-      // simpler: just draw a star shape
-      const s = this.size;
-      c.save();
-      c.translate(this.x, this.y);
-      for (let i = 0; i < 4; i++) {
-        c.save();
-        c.rotate(i * Math.PI / 2);
-        c.fillRect(-0.8, -s, 1.6, s);
-        c.restore();
-      }
-      c.restore();
-      c.restore();
+    if(currentTheme==='winter'&&groundPiles.length>5){
+      gctx.save();gctx.globalAlpha=0.22;gctx.fillStyle='#d8eeff';
+      gctx.beginPath();gctx.moveTo(0,H);
+      gctx.lineTo(0,H-Math.min(groundPiles.length*0.25,40));
+      groundPiles.forEach(p=>gctx.lineTo(p.x,H-8));
+      gctx.lineTo(W,H-Math.min(groundPiles.length*0.2,35));
+      gctx.lineTo(W,H);gctx.closePath();gctx.fill();gctx.restore();
     }
   }
 
-  function spawnPetals() {
-    while (petals.length < targetCount) {
-      petals.push(new Petal());
-    }
+  /* ── Burst ── */
+  function burst(cx,cy){
+    const n=18+Math.floor(Math.random()*14);
+    for(let i=0;i<n;i++){const p=new Particle(cx+(Math.random()-0.5)*50,cy+(Math.random()-0.5)*50,true);p.opacity=0.7;particles.push(p);}
+    for(let i=0;i<10;i++) sparkles.push(new Sparkle(cx,cy));
   }
 
-  function burst(cx, cy) {
-    const count = 20 + Math.floor(Math.random() * 15);
-    for (let i = 0; i < count; i++) {
-      const p = new Petal(cx + (Math.random()-0.5)*40, cy + (Math.random()-0.5)*40, true);
-      p.opacity = 0.8;
-      petals.push(p);
-    }
-    for (let i = 0; i < 8; i++) sparkles.push(new Sparkle(cx, cy));
-  }
-
-  function loop(ts) {
-    animFrame = requestAnimationFrame(loop);
-    const dt = Math.min(ts - lastTime, 50);
-    lastTime = ts;
-
-    // drift wind
-    windTarget += (Math.random() - 0.5) * 0.015;
-    const slider = parseFloat(document.getElementById('wind-slider').value);
-    windTarget = slider + Math.sin(ts * 0.0003) * 0.4;
-    wind += (windTarget - wind) * 0.04;
-    document.getElementById('stat-wind').textContent = wind.toFixed(1);
-
-    // maintain count
-    while (petals.length < targetCount) {
-      petals.push(new Petal());
-    }
-    if (petals.length > targetCount + 30) {
-      petals.splice(0, petals.length - targetCount - 30);
-    }
-
-    ctx.clearRect(0, 0, W, H);
-
-    // update & draw petals
-    petals = petals.filter(p => {
-      const landed = p.update(wind);
-      if (landed) { addToGround(p.x); return false; }
-      return true;
+  /* ── Loop ── */
+  function loop(ts){
+    requestAnimationFrame(loop);
+    windTarget=parseFloat(document.getElementById('wind-slider').value)+Math.sin(ts*0.00028)*0.45+Math.sin(ts*0.00071)*0.2;
+    wind+=(windTarget-wind)*0.035;
+    document.getElementById('stat-wind').textContent=wind.toFixed(1);
+    while(particles.length<targetCount) particles.push(new Particle());
+    if(particles.length>targetCount+35) particles.splice(0,particles.length-targetCount-35);
+    ctx.clearRect(0,0,W,H);
+    const aliveParticles=[];
+    particles.forEach(p=>{
+      if(p.update(wind)) addToGround(p.x);
+      else aliveParticles.push(p);
     });
-
-    // Sort by depth (farther first) for parallax effect
-    petals.sort((a, b) => b.depth - a.depth);
-    petals.forEach(p => p.draw(ctx));
-
-    // sparkles
-    sparkles = sparkles.filter(s => {
-      s.update();
-      s.draw(ctx);
-      return s.life > 0;
-    });
-
-    document.getElementById('stat-petals').textContent = petals.length;
+    particles = aliveParticles;
+    particles.sort((a,b)=>a.depth - b.depth);
+    particles.forEach(p=>p.draw(ctx));
+    sparkles=sparkles.filter(s=>{ s.update();s.draw(ctx);return s.life>0; });
+    document.getElementById('stat-particles').textContent=particles.length;
   }
 
-  // Events
-  container.addEventListener('click', (e) => {
-    const r = container.getBoundingClientRect();
-    burst(e.clientX - r.left, e.clientY - r.top);
-  });
+  /* ── Theme switch ── */
+  function switchTheme(name){
+    currentTheme=name; theme=THEMES[name];
+    container.className=`theme-${name}`;
+    container.style.background=theme.containerBg;
+    container.style.boxShadow=theme.boxShadow;
+    document.body.style.background=theme.bodyBg;
+    document.getElementById('title-text').textContent=theme.title;
+    document.getElementById('subtitle-text').textContent=theme.subtitle;
+    document.getElementById('click-hint').textContent=theme.hint;
+    document.getElementById('stat-label-p').textContent=theme.particleLabel;
+    document.getElementById('stat-label-f').textContent=theme.fallenLabel;
+    document.getElementById('btn-burst').textContent=theme.burstLabel;
+    document.getElementById('ctrl-count-label').textContent=theme.countLabel;
+    const defaultCounts={spring:60,summer:100,autumn:60,winter:50};
+    targetCount=defaultCounts[name] || 60;
+    document.getElementById('petal-count').value=targetCount;
+    document.querySelectorAll('.tab-btn').forEach(btn=>{btn.className='tab-btn';if(btn.dataset.season===name)btn.classList.add(`active-${name}`);});
+    particles=[];groundPiles=[];sparkles=[];fallenCount=0;
+    document.getElementById('stat-fallen').textContent=0;
+    gctx.clearRect(0,0,W,H); drawBackground();
+  }
 
-  document.getElementById('petal-count').addEventListener('input', (e) => {
-    targetCount = parseInt(e.target.value);
-  });
+  /* ── Events ── */
+  container.addEventListener('click',e=>{const r=container.getBoundingClientRect();burst(e.clientX-r.left,e.clientY-r.top);});
+  document.getElementById('petal-count').addEventListener('input',e=>{targetCount=parseInt(e.target.value);});
+  document.getElementById('btn-burst').addEventListener('click',e=>{e.stopPropagation();for(let i=0;i<5;i++)burst(W*0.1+Math.random()*W*0.8,H*0.08+Math.random()*H*0.35);});
+  document.getElementById('btn-clear').addEventListener('click',e=>{e.stopPropagation();particles=[];groundPiles=[];fallenCount=0;gctx.clearRect(0,0,W,H);document.getElementById('stat-fallen').textContent=0;});
+  document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>switchTheme(btn.dataset.season)));
 
-  document.getElementById('btn-burst').addEventListener('click', (e) => {
-    e.stopPropagation();
-    for (let i = 0; i < 5; i++) {
-      burst(W * 0.1 + Math.random() * W * 0.8, H * 0.1 + Math.random() * H * 0.3);
-    }
-  });
-
-  document.getElementById('btn-clear').addEventListener('click', (e) => {
-    e.stopPropagation();
-    petals = [];
-    groundPiles = [];
-    fallenCount = 0;
-    gctx.clearRect(0, 0, W, H);
-    document.getElementById('stat-fallen').textContent = 0;
-  });
-
-  // Init
+  /* ── Init ── */
+  container.style.background=theme.containerBg;
+  container.style.boxShadow=theme.boxShadow;
+  document.body.style.background=theme.bodyBg;
   resize();
-  window.addEventListener('resize', resize);
-  spawnPetals();
+  window.addEventListener('resize',resize);
   requestAnimationFrame(loop);
 })();
 </script>
+</body>
+</html>
